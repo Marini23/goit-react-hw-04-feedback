@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import { FeedbackOptions } from './FeedbackOptions/FeedbackOptions';
 import { Statistics } from './Statistics/Statistics';
 import { Section } from './Section/Section';
@@ -6,61 +6,56 @@ import { Notification } from './Notification/Notification';
 import { GlobalStyles } from './GlobalStyle';
 import { Layout } from './Layout';
 
-export class App extends Component {
-  state = {
-    good: 0,
-    neutral: 0,
-    bad: 0,
+export const App = () => {
+  const [good, setGood] = useState(0);
+  const [neutral, setNeutral] = useState(0);
+  const [bad, setBad] = useState(0);
+
+  const leaveFeedback = e => {
+    switch (e) {
+      case `good`:
+        setGood(state => state + 1);
+        break;
+      case `neutral`:
+        setNeutral(state => state + 1);
+        break;
+      case `bad`:
+        setBad(state => state + 1);
+        break;
+      default:
+        return;
+    }
   };
 
-  leaveFeedback = e => {
-    this.setState({
-      [e]: this.state[e] + 1,
-    });
+  const countTotalFeedback = () => good + neutral + bad;
+
+  const countPositiveFeedbackPercentage = () => {
+    return Math.round((good * 100) / countTotalFeedback());
   };
+  const totalFeedback = countTotalFeedback() > 0;
 
-  countTotalFeedback = () => {
-    return Object.values(this.state).reduce(
-      (acc, totalValue) => acc + totalValue,
-      0
-    );
-  };
-
-  countPositiveFeedbackPercentage = () => {
-    const total = this.countTotalFeedback();
-    return Math.round((this.state.good * 100) / total);
-  };
-
-  render() {
-    const { good, neutral, bad } = this.state;
-
-    const totalFeedback = this.countTotalFeedback() > 0;
-
-    return (
-      <Layout>
-        <Section title="Please leave feedback">
-          <FeedbackOptions
-            options={Object.keys(this.state)}
-            onLeaveFeedback={this.leaveFeedback}
+  return (
+    <Layout>
+      <Section title="Please leave feedback">
+        <FeedbackOptions
+          options={Object.keys({ good, neutral, bad })}
+          onLeaveFeedback={leaveFeedback}
+        />
+      </Section>
+      <Section title="Statistics">
+        {totalFeedback ? (
+          <Statistics
+            good={good}
+            neutral={neutral}
+            bad={bad}
+            total={countTotalFeedback()}
+            positivePercentage={countPositiveFeedbackPercentage()}
           />
-        </Section>
-        <Section title="Statistics">
-          {totalFeedback ? (
-            <Statistics
-              good={good}
-              neutral={neutral}
-              bad={bad}
-              total={this.countTotalFeedback(this.state)}
-              positivePercentage={this.countPositiveFeedbackPercentage(
-                this.state
-              )}
-            />
-          ) : (
-            <Notification message="There is no feedback" />
-          )}
-        </Section>
-        <GlobalStyles />
-      </Layout>
-    );
-  }
-}
+        ) : (
+          <Notification message="There is no feedback" />
+        )}
+      </Section>
+      <GlobalStyles />
+    </Layout>
+  );
+};
